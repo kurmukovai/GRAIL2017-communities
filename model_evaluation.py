@@ -12,7 +12,8 @@ penalties = np.array([0.01, 0.1, 1, 10, 50], dtype=float)
 def grid_search(gram_matrix, target, subjects, idx,
                 params=params, penalties=penalties,
                 n_folds=10, n_repetitions=50,
-                start_state=0, kernel = 'exp'):
+                start_state=0, kernel = 'exp',
+                exact_matrix=False):
     
     def return_unique(idx, target, subjects):
         
@@ -54,9 +55,13 @@ def grid_search(gram_matrix, target, subjects, idx,
     
     train_auc_mean = np.zeros((len(params), len(penalties)))
     train_auc_std = np.zeros((len(params), len(penalties)))
-
+    
+    if not exact_matrix: # Можно передавать не полную матрицу 756x756 а уже поменьше с двумя AD Normal
+        gram_matrix = gram_matrix[idx, :][:, idx]
+    
+        
     for kidx,a in enumerate(params):
-        kernel = make_kernel(gram_matrix[idx, :][:, idx], a)
+        kernel = make_kernel(gram_matrix, a)
         for sidx,penalty in enumerate(penalties):
             auc = repeatSVM_labeled(kernel, target, subjects, idx,
                                     penalty = penalty)
